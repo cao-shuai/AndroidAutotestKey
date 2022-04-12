@@ -9,7 +9,7 @@ import argparse
 import warnings
 
 file = "key.xls"
-keyfile = "key.ini"
+keyfile = "mode.key"
 sys = platform.system()
 autosyskeyfile="autokeyfile"+sys+".sh"
 autokeyfile = "autokeyfile.sh"
@@ -23,7 +23,7 @@ def read_excel(sheetkeymap):
 
 	#check sheet count
 	sheetcount=len(readfile.sheets())
-	print ("sheet count "+str(sheetcount))
+	#print ("sheet count "+str(sheetcount))
 	if sheetkeymap >= sheetcount:
 		warnings.warn("map sheet index big than sheet number error!!!")
 		exit(0)
