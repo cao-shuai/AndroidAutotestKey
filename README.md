@@ -8,3 +8,4 @@
 说明：
   1. key.xls sheet1为要调用填的按键值顺序，第三列的等待时长random为0-10S随机值。
   2. 按键名字需要和sheet2或者sheetX进行大小写匹配。
+  3. autokeyfile.sh 500 则为压测500次
