@@ -57,6 +57,66 @@ def read_excel(sheetkeymap):
 			warnings.warn (str(rows[0])+" can not map keycode!!!!!!!!!!,may don't you want or need add scan key code in key.xmls sheet"+str(sheetkeymap+1))
 		i=i+1
 
+
+def readPaserLogfile(filename):
+	#open the log file
+	path=os.getcwd()
+	#print("patch : "+path)
+	cmd=""
+	pre_event_sec=0
+	pre_event_usec=0
+	pre_code=0
+	event_sec=0
+	event_usec=0
+	code=0
+	#paser log file
+	with open(path+"/"+filename,"r") as logfile:
+		while True:
+			line = logfile.readline();
+			if not line:
+				#print("parser log file end")
+				break
+			elif 'MANGODANRecordKeyEvent' in line:
+			    list=line.split(',')
+			    #print(list)
+			    for index ,val in enumerate(list):
+			    	if index == 1: #code=value
+			    		pre_code=code
+			    		code=val.split('=')[-1]
+			    		#print("code: %s"%code)
+			    	elif index == 2: #event_sec=value
+			    		pre_event_sec=event_sec
+			    		event_sec=long(val.split('=')[-1])
+			    		#print("event_sec:%s"%event_sec)
+			    	elif index == 3: #event_usec=value
+			    		pre_event_usec=event_usec
+			    		event_usec=long(val.split('=')[-1])
+			    		#print("event_usec:%s"%event_usec)
+			    	elif index == 0:
+			    		#print("=============================")
+			    		if pre_code != 0:
+			    			now=event_sec*1000*1000+event_usec
+			    			before=pre_event_sec*1000*1000+pre_event_usec
+			    			diff=(now-before)/1000
+			    			cmd="\trepeatkey \""+"CODE"+"\" \""+"1"+"\" \""+str(diff/100)+"\" \""+str(pre_code)+"\"\n"
+			    			#print("cmd: %s"%cmd)
+			    			cmdlist.append(cmd)
+			else:
+				pass
+		if cmd != "":
+			now=event_sec*1000*1000+event_usec
+			before=pre_event_sec*1000*1000+pre_event_usec
+			diff=(now-before)/1000
+			cmd="\trepeatkey \""+"CODE"+"\" \""+"1"+"\" \""+str(diff/100)+"\" \""+str(pre_code)+"\"\n"
+			#print("cmd: %s"%cmd)
+			cmdlist.append(cmd)
+			#add last keyevent
+			cmd="\trepeatkey \""+"CODE"+"\" \""+"1"+"\" \""+"0"+"\" \""+str(code)+"\"\n"
+			#print("cmd: %s"%cmd)
+			cmdlist.append(cmd)
+		logfile.close()
+
+#create auto test key file 		
 def createautotestkey():
 	lines = []
 	dontwrite=0
@@ -106,14 +166,23 @@ if __name__ == '__main__':
 	if os.path.isfile(autokeyfile):
 		os.remove(autokeyfile)
 	parser = argparse.ArgumentParser(usage="it's usage tip.", description="help info.")
+	parser.add_argument("--type", type=str,default="key.xls",help="default import key.xls, type : import keyvent from log file name",dest="typefilename")
 	parser.add_argument("--sheet",type=int,default=2,help="keymapsheet index number",dest="sheet")
 	args = parser.parse_args()
-	keymapsheet = args.sheet - 1
-	if keymapsheet < 1:
-		warnings.warn("key map sheet need big than 1 error!!!")
-		exit(0)
-	#todo can pass throw keymapsheet
-	read_excel(keymapsheet)
+	filetype = args.typefilename
+
+	if filetype == file:
+		print("import key event form key.xls")
+		#parse xml sheet 
+		keymapsheet = args.sheet - 1
+		if keymapsheet < 1:
+			warnings.warn("key map sheet need big than 1 error!!!")
+			exit(0)
+		read_excel(keymapsheet)
+	else:
+		print("import key event from log file :"+filetype)
+		readPaserLogfile(filetype)
+	
 	createautotestkey()
 	if len(cmdlist) == 0:
 		warnings.warn("invalue sh, keymap can't map any scankeycode!!!!")
